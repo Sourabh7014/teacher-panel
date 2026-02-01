@@ -1,0 +1,42 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UserDropdownContent } from "./user-dropdown-content";
+
+export function Profile({
+  user,
+}: {
+  user: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar: string;
+  };
+}) {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 relative">
+          <Avatar className="h-8 w-8 rounded-lg">
+            <AvatarImage src={user?.avatar} alt={user?.first_name} />
+            <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+              {user?.first_name?.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+        side="bottom"
+        align="end"
+        sideOffset={4}
+      >
+        <UserDropdownContent user={user} />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
