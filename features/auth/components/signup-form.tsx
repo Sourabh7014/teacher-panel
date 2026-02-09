@@ -54,11 +54,9 @@ export function SignupForm() {
       if (response?.user) {
         cookieService.setCookie("user", JSON.stringify(response.user));
       }
-
-      toast.success("Account created successfully!");
       router.push("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Failed to create account");
+      console.error(error.message || "Failed to create account");
     } finally {
       setIsLoading(false);
     }

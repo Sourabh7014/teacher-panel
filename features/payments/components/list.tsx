@@ -223,7 +223,7 @@ export default function PaymentList() {
               className="border-0 bg-transparent p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0"
             />
           </div>
-          <div className="rounded-md border [&_thead_tr]:bg-rose-50/50 [&_thead_tr]:border-b-rose-100">
+          <div className="rounded-md bg-background overflow-hidden">
             <DataTable table={table} />
           </div>
         </CardContent>
