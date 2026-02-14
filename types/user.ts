@@ -7,4 +7,5 @@ export interface User {
   status: UserStatus;
   mobile?: string;
   profile_picture?: string;
+  role: string;
 }

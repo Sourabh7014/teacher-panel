@@ -40,7 +40,7 @@ import {
   Loader2,
 } from "lucide-react";
 import studentService from "../api.service";
-import { Student } from "./columns";
+import { Student } from "../model";
 
 const studentSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),

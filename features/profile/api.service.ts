@@ -1,6 +1,4 @@
 import BaseService from "@/lib/api.service";
-import apiClient from "@/lib/axios";
-import { AxiosRequestConfig } from "axios";
 import { PaymentSession } from "@/features/profile/model";
 
 class ProfileService extends BaseService {
@@ -10,6 +8,14 @@ class ProfileService extends BaseService {
 
   async getProfile() {
     return await this.get("/me");
+  }
+
+  async getAddress() {
+    return await this.get("/address");
+  }
+
+  async updateAddress(data: any) {
+    return await this.post("/address", data);
   }
 
   async updateProfile(data: any) {

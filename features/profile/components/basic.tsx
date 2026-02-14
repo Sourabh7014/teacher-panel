@@ -35,32 +35,33 @@ import {
 import { cn } from "@/lib/utils";
 import PaymentReminderDialog from "@/components/PaymentReminderDialogProps";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import profileService from "../api.service";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
-type CurrentStatus = "college_student" | "employed" | "unemployed" | "";
-type Qualification = "undergraduate" | "graduate" | "postgraduate" | "";
+type Qualification = "undergraduate" | "graduate" | "postgraduate";
+type CurrentStatus = "college_student" | "employed" | "unemployed";
 
-interface FormData {
+interface ProfileFormData {
   fullName: string;
   fatherName: string;
   gender: string;
   dob: Date | undefined;
   contactNumber: string;
   email: string;
-  qualification: Qualification;
-  currentStatus: CurrentStatus;
-  // College Student fields
+  qualification: Qualification | "";
+  currentStatus: CurrentStatus | "";
   collegeName: string;
   course: string;
   year: string;
-  // Employed fields
   organizationName: string;
   designation: string;
-  // Unemployed fields
   monthlyPaymentExpectation: string;
 }
 
 const ProfileForm = () => {
-  const [formData, setFormData] = useState<FormData>({
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<ProfileFormData>({
     fullName: "",
     fatherName: "",
     gender: "",
@@ -78,16 +79,80 @@ const ProfileForm = () => {
   });
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response: any = await profileService.getProfile();
+        const data = response.user;
+        setFormData({
+          fullName: data.name || "",
+          fatherName: data.father_name || "",
+          gender: data.gender || "",
+          dob: data.dob
+            ? new Date(
+                !isNaN(Number(data.dob)) &&
+                  Math.abs(Number(data.dob)) < 100000000000
+                  ? Number(data.dob) * 1000
+                  : data.dob,
+              )
+            : undefined,
+          contactNumber: data.mobile || "",
+          email: data.email || "",
+          qualification: (data.qualification_level as Qualification) || "",
+          currentStatus: (data.current_status as CurrentStatus) || "",
+          collegeName: data.college_name || "",
+          course: data.course || "",
+          year: data.year ? String(data.year) : "",
+          organizationName: data.organization_name || "",
+          designation: data.designation || "",
+          monthlyPaymentExpectation: data.monthly_payment_expectation
+            ? String(data.monthly_payment_expectation)
+            : "",
+        });
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+        toast.error("Failed to load profile data");
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const handleInputChange = (
-    field: keyof FormData,
+    field: keyof ProfileFormData,
     value: string | Date | undefined,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowPaymentDialog(true);
+    setLoading(true);
+
+    const payload = {
+      name: formData.fullName,
+      father_name: formData.fatherName,
+      gender: formData.gender,
+      dob: formData.dob ? format(formData.dob, "yyyy-MM-dd") : null,
+      mobile: formData.contactNumber,
+      qualification: formData.qualification,
+      current_status: formData.currentStatus,
+      college_name: formData.collegeName,
+      course: formData.course,
+      year: formData.year,
+      organization_name: formData.organizationName,
+      designation: formData.designation,
+      monthly_payment_expectation: formData.monthlyPaymentExpectation,
+    };
+
+    try {
+      await profileService.updateProfile(payload);
+    } catch (error) {
+      console.error("Profile update failed:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePayNow = () => {
@@ -183,12 +248,16 @@ const ProfileForm = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal pl-9 relative bg-background/50",
+                      "w-full px-3 justify-start text-left font-normal bg-background/50",
                       !formData.dob && "text-muted-foreground",
                     )}
                   >
-                    <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    {formData.dob ? format(formData.dob, "PPP") : "Select date"}
+                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                    {formData.dob ? (
+                      format(formData.dob, "PPP")
+                    ) : (
+                      <span>Select date</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -199,7 +268,7 @@ const ProfileForm = () => {
                     initialFocus
                     fromYear={1950}
                     toYear={new Date().getFullYear()}
-                    captionLayout="dropdown-buttons"
+                    captionLayout="dropdown"
                     classNames={{
                       caption_label: "hidden",
                       caption_dropdowns: "flex gap-2 p-2",
@@ -248,7 +317,8 @@ const ProfileForm = () => {
                   placeholder="Enter your email address"
                   className="pl-9 bg-background/50 focus:bg-background transition-colors"
                   value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  readOnly
+                  disabled
                 />
               </div>
             </div>
@@ -375,7 +445,7 @@ const ProfileForm = () => {
                         value={formData.year}
                         onValueChange={(v) => handleInputChange("year", v)}
                       >
-                        <SelectTrigger className="bg-background">
+                        <SelectTrigger className="bg-background w-full">
                           <SelectValue placeholder="Select Year" />
                         </SelectTrigger>
                         <SelectContent>
@@ -476,8 +546,9 @@ const ProfileForm = () => {
             type="submit"
             size="lg"
             className="w-full md:w-auto px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 transition-all hover:scale-[1.02]"
+            disabled={loading}
           >
-            Save Profile Changes
+            {loading ? "Saving..." : "Save Profile"}
           </Button>
         </div>
       </form>

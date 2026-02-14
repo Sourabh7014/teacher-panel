@@ -21,14 +21,11 @@ export function useAuth(): UseAuthReturn {
   const fetchUser = useCallback(async () => {
     try {
       const authToken = cookieService.getCookie("authToken");
-
       if (!authToken) {
         setIsLoading(false);
         return;
       }
-
       const response = await profileService.getProfile();
-
       if (response?.user) {
         setUser(response.user as User);
       }

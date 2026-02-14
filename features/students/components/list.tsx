@@ -2,7 +2,8 @@
 
 import { useDataTable } from "@/hooks/use-data-table";
 import { DataTable } from "@/components/data-table/data-table";
-import { createColumns, Student } from "./columns";
+import { createColumns } from "./columns";
+import { Student } from "@/features/students/model";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -48,6 +49,7 @@ export default function StudentList() {
   const [search, setSearch] = useQueryState("search", parseAsString);
   const [sort] = useQueryState("sort", parseAsString);
   const [status, setStatus] = useQueryState("status", parseAsString);
+  const [isFree, setIsFree] = useState(false);
   const { refreshUser } = useAuth();
 
   // Re-fetch when URL params change (or mounts) or when refreshKey changes
@@ -56,7 +58,7 @@ export default function StudentList() {
 
   const { table } = useDataTable({
     data,
-    columns: createColumns(refreshData),
+    columns: createColumns(refreshData, isFree),
     pageCount,
     manual: true,
     enableAdvancedFilter: false,
@@ -81,6 +83,7 @@ export default function StudentList() {
         setActiveStudents(response?.active_students ?? 0);
         setPendingStudents(response?.pending_students ?? 0);
         setCompletedStudents(response?.completed_students ?? 0);
+        setIsFree(response?.is_free ?? false);
         if (response?.students) {
           setData(response.students);
         }
@@ -250,7 +253,7 @@ export default function StudentList() {
       <Card className="rounded-xl border bg-card text-card-foreground shadow-sm">
         <CardContent className="p-6 space-y-4">
           {/* Payment Button - Shows when students are selected */}
-          {hasSelectedStudents && (
+          {hasSelectedStudents && !isFree && (
             <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">

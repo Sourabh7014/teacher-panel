@@ -1,4 +1,4 @@
-import { Student } from "@/features/students/components/columns";
+import { Student } from "@/features/students/model";
 import { User } from "./user";
 
 export interface Data {
@@ -14,6 +14,8 @@ export interface Data {
   completed_students?: number;
 
   payment_session_id?: string;
+  order_id?: string;
+  is_free?: boolean;
 }
 
 export interface Meta {
